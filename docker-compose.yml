@@ -1,0 +1,55 @@
+version: "3"
+services:
+  mariadb:
+    image: mariadb
+    environment:
+    - MYSQL_DATABASE=racktables
+    - MYSQL_USER=racktables
+    - MYSQL_PASSWORD=password123
+    - MYSQL_RANDOM_ROOT_PASSWORD=password123
+    volumes:
+    - ./db_data:/var/lib/mysql
+    networks:
+    - db_network
+
+
+  racktables:
+    build: .
+    environment:
+    - DBHOST=mariadb
+    - DBNAME=racktables
+    - DBUSER=racktables
+    - DBPASS=password123
+    networks:
+    - db_network
+    - web_network
+    volumes:
+    - racktables:/opt/racktables/wwwroot
+
+
+  nginx:
+    image: nginx:stable-alpine
+
+    volumes:
+     - racktables:/opt/racktables/wwwroot
+     - ./nginx.conf:/etc/nginx/nginx.conf
+#    - ./racktables-contribs/:/racktables-contribs/
+    ports:
+    - 80:80
+    depends_on:
+    - racktables
+    - mariadb
+    networks:
+    - web_network
+#    volumes_from:
+#    - racktables
+networks:
+  web_network:
+  db_network:
+
+volumes:
+  racktables:
+
+#    driver: local-persist
+#    driver_opts:
+#      mountpoint: ./racktables/
